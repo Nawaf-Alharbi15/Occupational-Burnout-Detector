@@ -13,74 +13,58 @@ import {
   Legend 
 } from 'chart.js';
 
+// Initialize the charting library with necessary components and plugins
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend, ChartDataLabels);
-/* ============================================================
-   DATA
-   ============================================================ */
+
  
 const questions = q;
  
 const scaleOptions = options;
  
-// Per-dimension theme colours (used as inline styles where CSS cannot reach)
+// Define visual styles and icons for the three burnout categories
 const dimInfo = {
   exhaustion:  { label: "Exhaustion",  icon: "🔥", color: "#E87C3E", bg: "rgba(232,124,62,0.12)",  border: "rgba(232,124,62,0.3)"  },
   cynicism:    { label: "Cynicism",    icon: "🌫️", color: "#A07BE8", bg: "rgba(160,123,232,0.12)", border: "rgba(160,123,232,0.3)" },
   performance: { label: "Performance", icon: "⚡", color: "#3EB8A0", bg: "rgba(62,184,160,0.12)",  border: "rgba(62,184,160,0.3)"  },
 };
  
-/* ============================================================
-   HELPERS
-   ============================================================ */
- 
+
+// Calculate average percentages (0-100) for each category based on user answers
 function calcScores(answers) {
   const grouped = { exhaustion: [], cynicism: [], performance: [] };
+  
   questions.forEach(q => {
     if (answers[q.id] !== undefined) {
-      // If reverse: true, flip the value (4 - value)
-      // e.g. an answer of 4 (Always) becomes 0 (Never) — meaning good performance = low burnout
-      const value = q.reverse ? 4 - answers[q.id] : answers[q.id];
-      grouped[q.category].push(value);
+      // Just push the raw value (0-4)
+      grouped[q.category].push(answers[q.id]);
     }
   });
+
   const avg = arr => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+
   return {
+    // These result in percentages (0-100)
     exhaustion: Math.round((avg(grouped.exhaustion) / 4) * 100),
     cynicism: Math.round((avg(grouped.cynicism) / 4) * 100),
     performance: Math.round((avg(grouped.performance) / 4) * 100),
   };
 }
  
+// Determine the overall risk level based on the highest score in core burnout areas
 function getBurnoutLevel(scores) {
-  // Use the highest risk dimension (Exhaustion or Cynicism) 
-  // to determine the overall badge risk
+
   const coreRisk = Math.max(scores.exhaustion, scores.cynicism);
 
-  if (coreRisk <= 40) {
-    return { 
-      level: "Low", 
-      color: "#3EB8A0", 
-      bg: "rgba(62,184,160,0.12)", 
-      desc: "Minimal burnout indicators" 
-    };
+  if (coreRisk < 40) {
+    return { level: "Low", color: "#3EB8A0", bg: "rgba(62,184,160,0.12)", desc: "Minimal burnout indicators" };
   } 
   if (coreRisk <= 75) {
-    return { 
-      level: "Moderate", 
-      color: "#E8B43E", 
-      bg: "rgba(232,180,62,0.12)", 
-      desc: "Some burnout indicators present" 
-    };
+    return { level: "Moderate", color: "#E8B43E", bg: "rgba(232,180,62,0.12)", desc: "Some burnout indicators present" };
   } 
-  return { 
-    level: "High", 
-    color: "#E85C4A", 
-    bg: "rgba(232,92,74,0.12)", 
-    desc: "Significant burnout indicators" 
-  };
+  return { level: "High", color: "#E85C4A", bg: "rgba(232,92,74,0.12)", desc: "Significant burnout indicators" };
 }
  
-// Injects Google Fonts once on mount
+// Load custom typography from Google Fonts when the app starts
 function useFonts() {
   useEffect(() => {
     const link = document.createElement("link");
@@ -120,6 +104,7 @@ const STATS = [
   ["~5", "Minutes"],
 ];
  
+// The landing page featuring the hero section, definitions, and navigation buttons
 function HomePage({ onStart,onViewResult, hasPreviousResult }) {
   useFonts();
   const [visible, setVisible] = useState(false);
@@ -277,6 +262,7 @@ function HomePage({ onStart,onViewResult, hasPreviousResult }) {
    ASSESSMENT PAGE
    ============================================================ */
  
+// The interactive quiz area that handles question cycling and answer selection
 function AssessmentPage({ onComplete, onBack }) {
   const [current,  setCurrent]  = useState(0);
   const [answers,  setAnswers]  = useState({});
@@ -411,6 +397,7 @@ function AssessmentPage({ onComplete, onBack }) {
    RESULTS PAGE
    ============================================================ */
  
+// Final display screen showing charts, deep-dive guidance
 function ResultsPage({ answers, onRestart,onGoHome }) {
   const [guidance, setGuidance] = useState("");
   const [loading,  setLoading]  = useState(true);
@@ -421,96 +408,55 @@ function ResultsPage({ answers, onRestart,onGoHome }) {
  
   useEffect(() => { fetchGuidance(); }, []);
  
-
+// Provides specific short guidance based on the currently selected chart bar
 const getAdvice = () => {
-    const score = scores[activeDim];
-    const info = dimInfo[activeDim];
-    let level;
-    let adviceText;
+  const score = scores[activeDim];
+  const info = dimInfo[activeDim];
+  let level;
+  let adviceText;
 
-    // First, determine if the percentage represents Low, Moderate, or High concern.
-    if (score < 40) {
-      level = { status: "Low", color: "#3EB8A0" };
-    } else if (score >= 40 && score <= 70) {
+  // performance (High score = Healthy) ---
+  if (activeDim === "performance") {
+    if (score >= 75) {
+      level = { status: "HEALTHY", color: "#3EB8A0" };
+      adviceText = `Your professional efficacy is strong (${score}%). You feel capable and impactful. To sustain this, continue seeking professional growth, as this sense of achievement is your greatest shield against burnout.`;
+    } else if (score >= 45) {
       level = { status: "MODERATE WARNING", color: "#E8B43E" };
+      adviceText = `Your sense of accomplishment is fluctuating (${score}%). You may feel your impact is diminishing. Focus on 'small wins' and seek feedback from peers to rebuild your connection to your results.`;
     } else {
-      level = { status: "High Priority", color: "#E85C4A" };
+      level = { status: "HIGH PRIORITY", color: "#E85C4A" };
+      adviceText = `A score of ${score}% in Professional Efficacy is a critical signal. You likely feel ineffective or that your work no longer matters. It is vital to redefine your contributions and value with leadership support.`;
     }
-
-    // Second, generate professional, specific text based on the Dim *and* the Level.
-    if (level.status === "Low") {
-      adviceText = `Your current ${info.label} level is within a healthy, manageable range. Focus on continuing consistent self-care and maintaining current boundaries to sustain this balance.`;
-    } 
-    // --- START: Detailed logic for Moderate Warning ---
-    else if (level.status === "MODERATE WARNING") {
-      // 1. Specific to Exhaustion
-      if (activeDim === "exhaustion") {
-        adviceText = `Physiological signals indicate ${info.label} is increasing (${score}%). This level requires proactive intervention. Priority should be given to complete rest on weekends, restoring physical energy, and strictly boundarying work hours. A focus on delegating tasks will preserve your physical and emotional resources.`;
-      } 
-      // 2. Specific to Cynicism
-      else if (activeDim === "cynicism") {
-        adviceText = `A Moderate ${info.label} score of ${score}% suggests an increasing cognitive and emotional distance from work. Focus on re-establishing a sense of connection or purpose. This is a critical point to review current workload and assess if specific job duties align with your professional goals to counter growing detachment.`;
-      } 
-      // 3. Specific to Performance ( efficacy) - This is key! High isn't always good if it burns E/C.
-      else if (activeDim === "performance") {
-        adviceText = `A ${info.label} score of ${score}% suggests you feel professional effective but might be at risk of over-extending to maintain these results. Intervene now to ensure high performance is sustainable. Focus on validating the motivation behind 'peak performance' and ensure your high output is not being maintained by exhausting other personal resources. Continue to ensure complete breaks from screen time.`;
-      }
-    } 
-    // --- START: Detailed logic for High Priority ---
-    else if (level.status === "High Priority") {
-      // 1. Specific to Exhaustion
-      if (activeDim === "exhaustion") {
-        adviceText = `Your ${info.label} score of ${score}% is critical. Complete rest is no longer optional; it is a clinical necessity. Priority interventions include a formal review of your work capacity and a consideration of temporary leave. Consult a qualified professional immediately to discuss workload, boundary setting, and burnout recovery strategies.`;
-      } 
-      // 2. Specific to Cynicism
-      else if (activeDim === "cynicism") {
-        adviceText = `Critical levels of ${info.label} indicate significant professional detachment (${score}%). Focus on protecting your professional future. Review workload and immediately communicate 'at risk' tasks. It is strongly advised to seek confidential support, such as therapy or career counseling, to determine if environmental or structural changes are necessary.`;
-      } 
-      // 3. Specific to Performance ( efficacy) - This is key! Too high can mask impending burnout.
-      else if (activeDim === "performance") {
-        adviceText = `Your high professional efficacy score of ${score}% in ${info.label} might be masking impending burnout. Intervene now by formally reassessing work capacity and immediate reduction of workload. Seek immediate professional input to validate the sustainability of current outputs, and prioritze boundaries and rest, as continued operation at this intensity is a high burnout risk.`;
-      }
+  } 
+  // --- EXHAUSTION & CYNICISM LOGIC (High score = Risk) ---
+  else {
+    if (score < 40) {
+      level = { status: "LOW CONCERN", color: "#3EB8A0" };
+      adviceText = `Your ${info.label} levels are well-managed at ${score}%. You are maintaining a healthy emotional balance. Continue your current boundary-setting habits.`;
+    } else if (score <= 75) {
+      level = { status: "MODERATE WARNING", color: "#E8B43E" };
+      adviceText = activeDim === "exhaustion" 
+        ? `Physiological signals indicate ${info.label} is rising (${score}%). Priority should be given to restoring physical energy and strictly limiting work hours.`
+        : `Moderate ${info.label} (${score}%) suggests growing emotional distance. Review your workload to ensure your duties still align with your professional goals.`;
+    } else {
+      level = { status: "HIGH PRIORITY", color: "#E85C4A" };
+      adviceText = activeDim === "exhaustion"
+        ? `Your ${info.label} score of ${score}% is critical. Complete rest is a clinical necessity. Consult a professional immediately to discuss a formal review of your work capacity.`
+        : `Significant professional detachment detected (${score}%). This level of ${info.label} indicates severe burnout risk. Strategic changes to your work environment are strongly advised.`;
     }
+  }
 
-    // Return the professional status, color, and dynamic text.
-    return {
-      status: level.status,
-      color: level.color,
-      text: adviceText
-    };
-  };
+// Logic handles Performance as a positive metric and others as negative metrics
+  return { status: level.status, color: level.color, text: adviceText };
+};
 
 const advice = getAdvice();
 
-  async function fetchGuidance() {
-    setLoading(true);
-    const scoreDesc = `Exhaustion: ${scores.exhaustion}%, Cynicism: ${scores.cynicism}%, Performance: ${scores.performance}%`;
- 
-    try {
-      const res  = await fetch("https://api.anthropic.com/v1/messages", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model:      "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          system: "You are a compassionate occupational health expert. Provide empathetic, actionable guidance based on burnout assessment scores. Keep your response warm, practical, and under 300 words. Use plain paragraphs — no markdown headers or bullet lists. Focus on 2-3 concrete recommendations tailored to the specific score profile.",
-          messages: [{ role: "user", content: `Please provide personalised guidance based on these burnout assessment results:\n\n${scoreDesc}` }],
-        }),
-      });
-      const data = await res.json();
-      const text = data.content?.map(b => b.text || "").join("") || "";
-      setGuidance(text || "Unable to generate guidance at this time. Please consult a mental health professional or occupational health advisor for personalised support.");
-    } catch {
-      setGuidance("We weren't able to load personalised guidance right now. Based on your scores, consider speaking with an occupational health professional or a trusted colleague about your workload and well-being.");
-    }
-    setLoading(false);
-  }
 
- // 1. Calculate the sum
+ // Calculate the sum
  const totalPoints = (scores.exhaustion || 0) + (scores.cynicism || 0) + (scores.performance || 0);
 
- // 2. Create the data array safely
- // If totalPoints is 0, we show [0, 0, 0] to avoid the glitch
+
  const chartValues = totalPoints > 0 
   ? [
       Math.round((scores.exhaustion / totalPoints) * 100),
@@ -540,7 +486,7 @@ const advice = getAdvice();
       if (elements.length > 0) {
         const index = elements[0].index;
         const dims = ['exhaustion', 'cynicism', 'performance'];
-        setActiveDim(dims[index]); // This now works because it's inside the function
+        setActiveDim(dims[index]); 
       }
     },
     scales: {
@@ -569,7 +515,7 @@ const advice = getAdvice();
           
         </div>
  
-        {/* --- PIE CHART SECTION --- */}
+        {/* --- Bar CHART SECTION --- */}
 
           <div className="score-card" style={{ padding: '40px', marginBottom: '24px', textAlign: 'center' }}>
   <h3 className="serif-heading" style={{ fontSize: '24px', marginBottom: '30px', color: '#F0EDE6' }}>
@@ -593,7 +539,7 @@ const advice = getAdvice();
   
   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
     <h2 className="serif-heading" style={{ color: dimInfo[activeDim].color, margin: 0, fontSize: '24px' }}>
-      {dimInfo[activeDim].icon} {dimInfo[activeDim].label} Advice
+      {dimInfo[activeDim].icon} {dimInfo[activeDim].label} Guidance
     </h2>
     <span style={{ color: advice.color, fontWeight: 'bold', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>
       {advice.status}
@@ -604,28 +550,10 @@ const advice = getAdvice();
     {advice.text}
   </p>
 
-  <p style={{ color: '#9E9AAD', fontSize: '12px', marginTop: '10px', fontStyle: 'italic', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px' }}>
-    *Select another bar in the "Score Distribution" chart to see specific advice for that dimension.
+  <p style={{ color: '#9E9AAD',fontWeight: 500, fontSize: '13px', marginTop: '10px', fontStyle: 'italic', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px' }}>
+    Select another bar in the "Score Distribution" chart to see specific Guidance for that dimension.
   </p>
 </div>
- 
-        {/* AI-generated guidance */}
-        <div className="guidance-card">
-          <div className="guidance-header">
-            <div className="guidance-icon-wrap">✦</div>
-            <span className="guidance-title">Personalised Guidance</span>
-          </div>
- 
-          {loading ? (
-            <div className="guidance-loading">
-              <div className="loading-spinner" />
-              Generating your personalised guidance…
-            </div>
-          ) : (
-            <p className="guidance-text">{guidance}</p>
-          )}
-        </div>
- 
         <p className="disclaimer">
           This assessment is for informational purposes only and does not constitute
           medical or psychological advice. If you are experiencing significant distress,
@@ -650,6 +578,7 @@ const advice = getAdvice();
    APP ROOT
    ============================================================ */
  
+// Root component that manages navigation state and saves/loads data from browser storage
 export default function App() {
   const [view, setView] = useState("home");
 
