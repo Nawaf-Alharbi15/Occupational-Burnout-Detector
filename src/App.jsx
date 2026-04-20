@@ -2,7 +2,18 @@ import { useState, useEffect } from "react";
 import {q} from './quiestions.js'
 import {options} from './quiestions.js'
 import "./App.css";
- 
+import { Bar } from 'react-chartjs-2';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+import { 
+  Chart as ChartJS, 
+  CategoryScale, 
+  LinearScale, 
+  BarElement, 
+  Tooltip, 
+  Legend 
+} from 'chart.js';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend, ChartDataLabels);
 /* ============================================================
    DATA
    ============================================================ */
@@ -34,9 +45,9 @@ function calcScores(answers) {
   });
   const avg = arr => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
   return {
-    exhaustion:  avg(grouped.exhaustion),
-    cynicism:    avg(grouped.cynicism),
-    performance: avg(grouped.performance),
+    exhaustion: Math.round((avg(grouped.exhaustion) / 4) * 100),
+    cynicism: Math.round((avg(grouped.cynicism) / 4) * 100),
+    performance: Math.round((avg(grouped.performance) / 4) * 100),
   };
 }
  
@@ -161,12 +172,12 @@ function HomePage({ onStart }) {
           {Object.entries(dimInfo).map(([key, d]) => (
             <div key={key} className="dim-card"
               style={{ background: d.bg, border: `0.5px solid ${d.border}` }}>
-              <div className="dim-card-icon">{d.icon}</div>
+              
               <div className="dim-card-label" style={{ color: d.color }}>{d.label}</div>
               <div className="dim-card-desc">
-                {key === "exhaustion" && "Persistent depletion of physical and emotional resources."}
-                {key === "cynicism"   && "Growing detachment and indifference toward your work."}
-                {key === "efficacy"   && "Declining confidence in your ability to perform effectively."}
+                {key === "exhaustion"  && "Persistent depletion of physical and emotional resources."}
+                {key === "cynicism"    && "Growing detachment and indifference toward your work."}
+                {key === "performance" && "Declining confidence in your ability to perform effectively."}
               </div>
             </div>
           ))}
@@ -213,7 +224,10 @@ function HomePage({ onStart }) {
         <button className="start-btn" onClick={onStart}>
           Start Assessment →
         </button>
- 
+          
+        
+         
+
         <p className="privacy-note">Your responses are private and not stored.</p>
       </section>
     </div>
@@ -352,27 +366,53 @@ function AssessmentPage({ onComplete, onBack }) {
     </div>
   );
 }
+
  
 /* ============================================================
    RESULTS PAGE
    ============================================================ */
  
-function ResultsPage({ answers, onRestart }) {
+function ResultsPage({ answers, onRestart,onGoHome }) {
   const [guidance, setGuidance] = useState("");
   const [loading,  setLoading]  = useState(true);
- 
+  const [activeDim, setActiveDim] = useState('exhaustion');
+
   const scores  = calcScores(answers);
   const overall = getBurnoutLevel(scores);
  
   useEffect(() => { fetchGuidance(); }, []);
  
+
+const getAdvice = () => {
+  const score = scores[activeDim];
+  const info = dimInfo[activeDim];
+
+  if (score <= 40) {
+    return {
+      status: "Low Concern",
+      color: "#3EB8A0",
+      text: `Your ${info.label} level is healthy. To maintain this, focus on consistent self-care and setting clear work-life boundaries.`
+    };
+  } else if (score <= 70) {
+    return {
+      status: "Moderate Warning",
+      color: "#E8B43E",
+      text: `You're doing okay, but ${info.label} is starting to rise. You should focus on delegating tasks and ensuring you take full breaks away from screens.`
+    };
+  } else {
+    return {
+      status: "High Priority",
+      color: "#E85C4A",
+      text: `Your ${info.label} levels are critical. It is highly recommended to speak with a supervisor about workload or consult a professional for burnout recovery.`
+    };
+  }
+};
+
+const advice = getAdvice();
+
   async function fetchGuidance() {
     setLoading(true);
-    const scoreDesc = `
-Exhaustion score: ${scores.exhaustion.toFixed(2)} / 4 (${scores.exhaustion < 2 ? "low" : scores.exhaustion < 4 ? "moderate" : "high"})
-Cynicism score: ${scores.cynicism.toFixed(2)} / 4 (${scores.cynicism < 2 ? "low" : scores.cynicism < 4 ? "moderate" : "high"})
-Performance score: ${scores.performance.toFixed(2)} / 4 (${scores.performance < 1.5 ? "low" : scores.performance < 2.5 ? "moderate" : "high"})
-Overall level: ${overall.level}`.trim();
+    const scoreDesc = `Exhaustion: ${scores.exhaustion}%, Cynicism: ${scores.cynicism}%, Performance: ${scores.performance}%`;
  
     try {
       const res  = await fetch("https://api.anthropic.com/v1/messages", {
@@ -393,12 +433,62 @@ Overall level: ${overall.level}`.trim();
     }
     setLoading(false);
   }
- 
+
+ // 1. Calculate the sum
+ const totalPoints = (scores.exhaustion || 0) + (scores.cynicism || 0) + (scores.performance || 0);
+
+ // 2. Create the data array safely
+ // If totalPoints is 0, we show [0, 0, 0] to avoid the glitch
+ const chartValues = totalPoints > 0 
+  ? [
+      Math.round((scores.exhaustion / totalPoints) * 100),
+      Math.round((scores.cynicism / totalPoints) * 100),
+      Math.round((scores.performance / totalPoints) * 100),
+    ]
+  : [0, 0, 0];
+
+  const chartData = {
+    labels: ['Exhaustion', 'Cynicism', 'Performance'],
+    datasets: [{
+      label: 'Your Score',
+      data: [scores.exhaustion, scores.cynicism, scores.performance],
+      backgroundColor: [
+        '#E87C3E', //Exhaustion
+        '#A07BE8', //Cynicism
+        '#3EB8A0', //Performance
+      ],
+      borderRadius: 10,
+    }]
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    onClick: (event, elements) => {
+      if (elements.length > 0) {
+        const index = elements[0].index;
+        const dims = ['exhaustion', 'cynicism', 'performance'];
+        setActiveDim(dims[index]); // This now works because it's inside the function
+      }
+    },
+    scales: {
+      y: { min: 0, max: 100, ticks: { color: '#F0EDE6', callback: (v) => v + '%' } },
+      x: { ticks: { color: '#F0EDE6' } }
+    },
+    plugins: {
+      legend: { display: false },
+      datalabels: {
+        anchor: 'end', align: 'top', color: '#F0EDE6',
+        formatter: (val) => val + '%'
+      }
+    }
+  };
+
+
   return (
+    
     <div className="page results-page">
       <div className="results-container">
- 
-        {/* Header */}
         <div className="results-header">
           <span className="section-label">Your Results</span>
           <h1 className="serif-heading results-title">Burnout Assessment</h1>
@@ -414,46 +504,45 @@ Overall level: ${overall.level}`.trim();
           </div>
         </div>
  
+        {/* --- PIE CHART SECTION --- */}
+
+          <div className="score-card" style={{ padding: '40px', marginBottom: '24px', textAlign: 'center' }}>
+  <h3 className="serif-heading" style={{ fontSize: '24px', marginBottom: '30px', color: '#F0EDE6' }}>
+    Score Distribution
+  </h3>
+  <div style={{ height: '350px', width: '100%', position: 'relative', margin: '0 auto' }}>
+    <Bar data={chartData} options={chartOptions} />
+  </div>
+</div>
+
         {/* Per-dimension score cards */}
-        <div className="scores-list">
-          {Object.entries(dimInfo).map(([key, d]) => {
-            const score      = scores[key];
-            const fillWidth  = Math.round((score / 4) * 100);
-            const level      = score < 2 ? "Low" : score < 4 ? "Moderate" : "High";
-            const levelColor = score < 2 ? "#3EB8A0" : score < 4 ? "#E8B43E" : "#E85C4A";
- 
-            return (
-              <div key={key} className="score-card">
-                <div className="score-card-header">
-                  <div className="score-card-info">
-                    <span className="score-card-icon">{d.icon}</span>
-                    <span className="score-card-name">{d.label}</span>
-                  </div>
-                  {/* Level badge — colour depends on score → inline */}
-                  <span className="score-level-badge"
-                    style={{ color: levelColor, background: `${levelColor}15` }}>
-                    {level}
-                  </span>
-                </div>
- 
-                <div className="score-bar-track">
-                  {/* Fill width + colour depend on score + dim → inline */}
-                  <div className="score-bar-fill"
-                    style={{ width: `${fillWidth}%`, background: d.color }} />
-                </div>
- 
-                <div className="score-bar-labels">
-                  <span className="score-bar-low">Low</span>
-                  {/* Score value colour is per-dimension → inline */}
-                  <span className="score-bar-value" style={{ color: d.color }}>
-                    {score.toFixed(1)} / 4
-                  </span>
-                  <span className="score-bar-high">High</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        {/* Interactive Advice Container */}
+<div className="score-card advice-container" 
+     style={{ 
+       padding: '30px', 
+       marginBottom: '24px',
+       borderLeft: `6px solid ${dimInfo[activeDim].color}`,
+       textAlign: 'left',
+       transition: 'all 0.3s ease'
+     }}>
+  
+  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+    <h2 className="serif-heading" style={{ color: dimInfo[activeDim].color, margin: 0, fontSize: '24px' }}>
+      {dimInfo[activeDim].icon} {dimInfo[activeDim].label} Advice
+    </h2>
+    <span style={{ color: advice.color, fontWeight: 'bold', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+      {advice.status}
+    </span>
+  </div>
+
+  <p style={{ color: '#F0EDE6', lineHeight: '1.7', fontSize: '18px', marginBottom: '15px' }}>
+    {advice.text}
+  </p>
+
+  <p style={{ color: '#9E9AAD', fontSize: '12px', marginTop: '10px', fontStyle: 'italic', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px' }}>
+    *Select another bar in the "Score Distribution" chart to see specific advice for that dimension.
+  </p>
+</div>
  
         {/* AI-generated guidance */}
         <div className="guidance-card">
@@ -483,6 +572,9 @@ Overall level: ${overall.level}`.trim();
             Retake Assessment
           </button>
         </div>
+        <button className="go-back-btn" onClick={onGoHome}>
+            Go back
+          </button>
  
       </div>
     </div>
@@ -494,26 +586,29 @@ Overall level: ${overall.level}`.trim();
    ============================================================ */
  
 export default function App() {
-  const [view,         setView]         = useState("home");
+  const [view, setView] = useState("home");
   const [finalAnswers, setFinalAnswers] = useState(null);
- 
+
   return (
     <div>
       {view === "home" && (
         <HomePage onStart={() => setView("assessment")} />
       )}
- 
+
       {view === "assessment" && (
         <AssessmentPage
           onComplete={answers => { setFinalAnswers(answers); setView("results"); }}
           onBack={() => setView("home")}
         />
       )}
- 
+
       {view === "results" && finalAnswers && (
         <ResultsPage
           answers={finalAnswers}
-          onRestart={() => { setFinalAnswers(null); setView("home"); }}
+          // Retake goes straight to assessment
+          onRestart={() => { setFinalAnswers(null); setView("assessment"); }}
+          // Go back goes to home
+          onGoHome={() => { setFinalAnswers(null); setView("home"); }}
         />
       )}
     </div>

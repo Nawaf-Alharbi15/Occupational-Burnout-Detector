@@ -54,7 +54,7 @@
 /* Small all-caps orange label used above section headings */
 .section-label {
   display:        block;
-  font-size:      11px;
+  font-size:      16px;
   letter-spacing: 2.5px;
   text-transform: uppercase;
   color:          var(--color-accent);
@@ -64,7 +64,7 @@
 /* Serif display headings (Cormorant) */
 .serif-heading {
   font-family:     var(--font-serif);
-  font-weight:     500;
+  font-weight:     600;
   letter-spacing:  -0.01em;
   line-height:     1.15;
   margin:          0;
@@ -125,7 +125,7 @@
 /* Main H1 */
 .hero-title {
   font-family:    var(--font-serif);
-  font-size:      clamp(42px, 7vw, 82px);
+  font-size:      clamp(42px, 7vw, 100px);
   font-weight:    500;
   text-align:     center;
   line-height:    1.1;
@@ -178,16 +178,16 @@
 .definition-section {
   max-width: 860px;
   margin:    0 auto;
-  padding:   100px 24px;
+  padding:   70px 24px;
 }
  
 .definition-heading {
-  font-size:   clamp(30px, 5vw, 52px);
+  font-size:   clamp(30px, 5vw, 70px); 
   margin:      0 0 32px;
 }
  
 .definition-body {
-  font-size:    clamp(15px, 1.8vw, 18px);
+  font-size:    clamp(15px, 1.8vw, 24px);
   color:        var(--color-text-body);
   line-height:  1.85;
   margin-bottom: 52px;
@@ -214,14 +214,11 @@
   transition:    transform 0.2s;
 }
  
-.dim-card-icon {
-  font-size:     24px;
-  margin-bottom: 14px;
-}
+
  
 /* Label color stays inline (per-dimension) */
 .dim-card-label {
-  font-size:      13px;
+  font-size:      18px;
   font-weight:    500;
   letter-spacing: 0.5px;
   margin-bottom:  8px;
@@ -229,7 +226,7 @@
 }
  
 .dim-card-desc {
-  font-size:   14px;
+  font-size:   18px;
   color:       var(--color-text-muted);
   line-height: 1.6;
 }
@@ -242,8 +239,8 @@
  
 .symptoms-heading {
   font-family:   var(--font-serif);
-  font-size:     24px;
-  font-weight:   500;
+  font-size:     32px;
+  font-weight:   600;
   margin:        0 0 24px;
   color:         #E0DCEE;
 }
@@ -281,7 +278,8 @@
 }
  
 .symptom-text {
-  font-size: 15px;
+  font-size: 18px;
+  font-weight: 400;
   color:     var(--color-text-body);
 }
  
@@ -311,7 +309,7 @@
 }
  
 .cta-label {
-  font-size:      11px;
+  font-size:      16px;
   letter-spacing: 2.5px;
   text-transform: uppercase;
   color:          var(--color-accent);
@@ -320,14 +318,14 @@
 }
  
 .cta-heading {
-  font-size:   clamp(28px, 4.5vw, 46px);
+  font-size:   clamp(28px, 4.5vw, 50px);
   margin:      0 0 20px;
   max-width:   600px;
   line-height: 1.2;
 }
  
 .cta-body {
-  font-size:     clamp(14px, 1.7vw, 17px);
+  font-size:     clamp(14px, 1.7vw, 18px);
   color:         var(--color-text-muted);
   max-width:     480px;
   line-height:   1.75;
@@ -388,6 +386,33 @@
 }
  
 .start-btn:active {
+  transform: translateY(0);
+}
+
+
+.view-result-btn {
+  background:     transparent;
+  color:          var(--color-accent);
+  border:         1px solid rgba(232, 124, 62, 0.6);
+  border-radius:  var(--radius-pill);
+  padding:        16px 48px;
+  font-size:      16px;
+  font-family:    var(--font-sans);
+  font-weight:    500;
+  cursor:         pointer;
+  letter-spacing: 0.3px;
+  transition:     all 0.3s ease;
+  margin-top: 15px;
+}
+ 
+.view-result-btn:hover {
+  background:  var(--color-accent);
+  color:       var(--color-bg);
+  transform:   translateY(-2px);
+  box-shadow:  0 12px 40px rgba(232, 124, 62, 0.3);
+}
+ 
+.view-result-btn:active {
   transform: translateY(0);
 }
  
@@ -780,6 +805,25 @@
 }
  
 .restart-btn:hover {
+  background: var(--color-accent);
+  color:      var(--color-bg);
+}
+
+.go-back-btn {
+  background:    transparent;
+  color:         var(--color-accent);
+  border:        1px solid rgba(232, 124, 62, 0.5);
+  border-radius: var(--radius-pill);
+  padding:       14px 40px;
+  font-size:     15px;
+  font-family:   var(--font-sans);
+  font-weight:   500;
+  cursor:        pointer;
+  transition:    all 0.25s;
+  margin-top: 10px;
+}
+
+.go-back-btn:hover {
   background: var(--color-accent);
   color:      var(--color-bg);
 }
