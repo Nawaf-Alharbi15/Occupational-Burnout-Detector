@@ -30,7 +30,7 @@
   {
     id: 6,
     category: "cynicism",
-    text: "I feel I treat some recipients as if they were impersonal (items)"
+    text: "I feel I treat some recipients as if they were impersonal 'items'"
   },
   {
     id: 7,

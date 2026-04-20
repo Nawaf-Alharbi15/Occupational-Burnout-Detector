@@ -444,25 +444,31 @@
  
 /* Header row with back button and counter */
 .assessment-header {
-  padding:         24px 32px;
+  padding: 40px 48px;
   display:         flex;
   justify-content: space-between;
   align-items:     center;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.05);
 }
  
 .back-btn {
-  background:  none;
-  border:      none;
-  color:       var(--color-text-faint);
-  cursor:      pointer;
-  font-size:   14px;
-  padding:     6px 0;
+  background: none;
+  border: none;
+  color: #9E9AAD; 
+  cursor: pointer;
+  font-size: 22px; 
   font-family: var(--font-sans);
+  transition: color 0.3s ease;
 }
- 
+
+ .back-btn:hover {
+  color: #F0EDE6;
+}
+
 .question-counter {
-  font-size: 13px;
-  color:     var(--color-text-faint);
+  font-size: 20px; 
+  color: #9E9AAD;
+  letter-spacing: 1px;
 }
  
 .counter-current {

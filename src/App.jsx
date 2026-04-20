@@ -52,10 +52,32 @@ function calcScores(answers) {
 }
  
 function getBurnoutLevel(scores) {
-  const total = (scores.exhaustion + scores.cynicism + scores.performance) / 3;
-  if (total < 1.5)   return { level: "Low",      color: "#3EB8A0", bg: "rgba(62,184,160,0.12)",  desc: "Minimal burnout indicators" };
-  if (total < 2.5) return { level: "Moderate", color: "#E8B43E", bg: "rgba(232,180,62,0.12)",  desc: "Some burnout indicators present" };
-  return               { level: "High",     color: "#E85C4A", bg: "rgba(232,92,74,0.12)",   desc: "Significant burnout indicators" };
+  // Use the highest risk dimension (Exhaustion or Cynicism) 
+  // to determine the overall badge risk
+  const coreRisk = Math.max(scores.exhaustion, scores.cynicism);
+
+  if (coreRisk <= 40) {
+    return { 
+      level: "Low", 
+      color: "#3EB8A0", 
+      bg: "rgba(62,184,160,0.12)", 
+      desc: "Minimal burnout indicators" 
+    };
+  } 
+  if (coreRisk <= 75) {
+    return { 
+      level: "Moderate", 
+      color: "#E8B43E", 
+      bg: "rgba(232,180,62,0.12)", 
+      desc: "Some burnout indicators present" 
+    };
+  } 
+  return { 
+    level: "High", 
+    color: "#E85C4A", 
+    bg: "rgba(232,92,74,0.12)", 
+    desc: "Significant burnout indicators" 
+  };
 }
  
 // Injects Google Fonts once on mount
@@ -98,12 +120,22 @@ const STATS = [
   ["~5", "Minutes"],
 ];
  
-function HomePage({ onStart }) {
+function HomePage({ onStart,onViewResult, hasPreviousResult }) {
   useFonts();
   const [visible, setVisible] = useState(false);
+  const [showWarning, setShowWarning] = useState(false); //For red warning message
+
   useEffect(() => { setTimeout(() => setVisible(true), 80); }, []);
  
-  // Fade-in is JS-driven (opacity + translateY depend on `visible` state) → stays inline
+  const handleViewResult = () => {
+    if (hasPreviousResult) {
+      onViewResult();
+    } else {
+      setShowWarning(true);
+      setTimeout(() => setShowWarning(false), 3000); // Hide after 3 seconds
+    }
+  };
+
   const fadeIn = (delay = 0) => ({
     opacity:    visible ? 1 : 0,
     transform:  visible ? "translateY(0)" : "translateY(28px)",
@@ -225,10 +257,17 @@ function HomePage({ onStart }) {
           Start Assessment →
         </button>
           
-        
+        <button className="view-result-btn" onClick={handleViewResult}>
+         View Result
+        </button>
          
+        {/* THE WARNING MESSAGE */}
+          {showWarning && (
+            <p style={{ color: "#E85C4A", marginTop: "15px", fontWeight: "bold" }}>
+              ⚠️ You have to do the assessment test first
+            </p>
+          )}
 
-        <p className="privacy-note">Your responses are private and not stored.</p>
       </section>
     </div>
   );
@@ -384,29 +423,62 @@ function ResultsPage({ answers, onRestart,onGoHome }) {
  
 
 const getAdvice = () => {
-  const score = scores[activeDim];
-  const info = dimInfo[activeDim];
+    const score = scores[activeDim];
+    const info = dimInfo[activeDim];
+    let level;
+    let adviceText;
 
-  if (score <= 40) {
+    // First, determine if the percentage represents Low, Moderate, or High concern.
+    if (score < 40) {
+      level = { status: "Low", color: "#3EB8A0" };
+    } else if (score >= 40 && score <= 70) {
+      level = { status: "MODERATE WARNING", color: "#E8B43E" };
+    } else {
+      level = { status: "High Priority", color: "#E85C4A" };
+    }
+
+    // Second, generate professional, specific text based on the Dim *and* the Level.
+    if (level.status === "Low") {
+      adviceText = `Your current ${info.label} level is within a healthy, manageable range. Focus on continuing consistent self-care and maintaining current boundaries to sustain this balance.`;
+    } 
+    // --- START: Detailed logic for Moderate Warning ---
+    else if (level.status === "MODERATE WARNING") {
+      // 1. Specific to Exhaustion
+      if (activeDim === "exhaustion") {
+        adviceText = `Physiological signals indicate ${info.label} is increasing (${score}%). This level requires proactive intervention. Priority should be given to complete rest on weekends, restoring physical energy, and strictly boundarying work hours. A focus on delegating tasks will preserve your physical and emotional resources.`;
+      } 
+      // 2. Specific to Cynicism
+      else if (activeDim === "cynicism") {
+        adviceText = `A Moderate ${info.label} score of ${score}% suggests an increasing cognitive and emotional distance from work. Focus on re-establishing a sense of connection or purpose. This is a critical point to review current workload and assess if specific job duties align with your professional goals to counter growing detachment.`;
+      } 
+      // 3. Specific to Performance ( efficacy) - This is key! High isn't always good if it burns E/C.
+      else if (activeDim === "performance") {
+        adviceText = `A ${info.label} score of ${score}% suggests you feel professional effective but might be at risk of over-extending to maintain these results. Intervene now to ensure high performance is sustainable. Focus on validating the motivation behind 'peak performance' and ensure your high output is not being maintained by exhausting other personal resources. Continue to ensure complete breaks from screen time.`;
+      }
+    } 
+    // --- START: Detailed logic for High Priority ---
+    else if (level.status === "High Priority") {
+      // 1. Specific to Exhaustion
+      if (activeDim === "exhaustion") {
+        adviceText = `Your ${info.label} score of ${score}% is critical. Complete rest is no longer optional; it is a clinical necessity. Priority interventions include a formal review of your work capacity and a consideration of temporary leave. Consult a qualified professional immediately to discuss workload, boundary setting, and burnout recovery strategies.`;
+      } 
+      // 2. Specific to Cynicism
+      else if (activeDim === "cynicism") {
+        adviceText = `Critical levels of ${info.label} indicate significant professional detachment (${score}%). Focus on protecting your professional future. Review workload and immediately communicate 'at risk' tasks. It is strongly advised to seek confidential support, such as therapy or career counseling, to determine if environmental or structural changes are necessary.`;
+      } 
+      // 3. Specific to Performance ( efficacy) - This is key! Too high can mask impending burnout.
+      else if (activeDim === "performance") {
+        adviceText = `Your high professional efficacy score of ${score}% in ${info.label} might be masking impending burnout. Intervene now by formally reassessing work capacity and immediate reduction of workload. Seek immediate professional input to validate the sustainability of current outputs, and prioritze boundaries and rest, as continued operation at this intensity is a high burnout risk.`;
+      }
+    }
+
+    // Return the professional status, color, and dynamic text.
     return {
-      status: "Low Concern",
-      color: "#3EB8A0",
-      text: `Your ${info.label} level is healthy. To maintain this, focus on consistent self-care and setting clear work-life boundaries.`
+      status: level.status,
+      color: level.color,
+      text: adviceText
     };
-  } else if (score <= 70) {
-    return {
-      status: "Moderate Warning",
-      color: "#E8B43E",
-      text: `You're doing okay, but ${info.label} is starting to rise. You should focus on delegating tasks and ensuring you take full breaks away from screens.`
-    };
-  } else {
-    return {
-      status: "High Priority",
-      color: "#E85C4A",
-      text: `Your ${info.label} levels are critical. It is highly recommended to speak with a supervisor about workload or consult a professional for burnout recovery.`
-    };
-  }
-};
+  };
 
 const advice = getAdvice();
 
@@ -494,14 +566,7 @@ const advice = getAdvice();
           <h1 className="serif-heading results-title">Burnout Assessment</h1>
  
           {/* Overall badge — bg/border depend on overall.color → inline */}
-          <div className="overall-badge"
-            style={{ background: overall.bg, border: `1px solid ${overall.color}40` }}>
-            <div className="overall-dot" style={{ background: overall.color }} />
-            <span className="overall-level" style={{ color: overall.color }}>
-              {overall.level} Risk
-            </span>
-            <span className="overall-desc">— {overall.desc}</span>
-          </div>
+          
         </div>
  
         {/* --- PIE CHART SECTION --- */}
@@ -587,17 +652,33 @@ const advice = getAdvice();
  
 export default function App() {
   const [view, setView] = useState("home");
-  const [finalAnswers, setFinalAnswers] = useState(null);
+
+  //Initialize state by checking localStorage immediately
+  const [finalAnswers, setFinalAnswers] = useState(() => {
+    const saved = localStorage.getItem("burnout_results");
+    return saved ? JSON.parse(saved) : null;
+  });
 
   return (
     <div>
       {view === "home" && (
-        <HomePage onStart={() => setView("assessment")} />
+        <HomePage 
+          onStart={() => setView("assessment")} 
+          onViewResult={() => setView("results")}
+          // Pass this so HomePage knows if a result exists
+          hasPreviousResult={finalAnswers !== null} 
+        />
       )}
 
       {view === "assessment" && (
         <AssessmentPage
-          onComplete={answers => { setFinalAnswers(answers); setView("results"); }}
+          onComplete={answers => { 
+          // Save to browser memory
+          localStorage.setItem("burnout_results", JSON.stringify(answers));
+          // Update current screen state
+          setFinalAnswers(answers); 
+          setView("results"); 
+          }}
           onBack={() => setView("home")}
         />
       )}
@@ -606,9 +687,14 @@ export default function App() {
         <ResultsPage
           answers={finalAnswers}
           // Retake goes straight to assessment
-          onRestart={() => { setFinalAnswers(null); setView("assessment"); }}
+          onRestart={() => { 
+            localStorage.removeItem("burnout_results"); // Clears the storage
+            setFinalAnswers(null); 
+            setView("assessment"); 
+          }}
+
           // Go back goes to home
-          onGoHome={() => { setFinalAnswers(null); setView("home"); }}
+          onGoHome={() => { setView("home"); }}
         />
       )}
     </div>
