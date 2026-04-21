@@ -54,7 +54,7 @@
 /* Small all-caps orange label used above section headings */
 .section-label {
   display:        block;
-  font-size:      16px;
+  font-size:      12px;
   letter-spacing: 2.5px;
   text-transform: uppercase;
   color:          var(--color-accent);
@@ -115,7 +115,7 @@
   padding:        6px 18px;
   border:         0.5px solid rgba(232, 124, 62, 0.5);
   border-radius:  var(--radius-pill);
-  font-size:      12px;
+  font-size:      10px;
   letter-spacing: 2px;
   text-transform: uppercase;
   color:          var(--color-accent);
@@ -125,7 +125,7 @@
 /* Main H1 */
 .hero-title {
   font-family:    var(--font-serif);
-  font-size:      clamp(42px, 7vw, 100px);
+  font-size:      clamp(42px, 7vw, 80px);
   font-weight:    500;
   text-align:     center;
   line-height:    1.1;
@@ -141,7 +141,7 @@
  
 /* Subtitle paragraph */
 .hero-subtitle {
-  font-size:   clamp(16px, 2.2vw, 20px);
+  font-size:   clamp(16px, 2.2vw, 16px);
   color:       var(--color-text-muted);
   text-align:  center;
   max-width:   500px;
@@ -182,12 +182,12 @@
 }
  
 .definition-heading {
-  font-size:   clamp(30px, 5vw, 70px); 
+  font-size:   clamp(30px, 5vw, 54px); 
   margin:      0 0 32px;
 }
  
 .definition-body {
-  font-size:    clamp(15px, 1.8vw, 24px);
+  font-size:    clamp(15px, 1.8vw, 18px);
   color:        var(--color-text-body);
   line-height:  1.85;
   margin-bottom: 52px;
@@ -218,7 +218,7 @@
  
 /* Label color stays inline (per-dimension) */
 .dim-card-label {
-  font-size:      18px;
+  font-size:      14px;
   font-weight:    500;
   letter-spacing: 0.5px;
   margin-bottom:  8px;
@@ -226,7 +226,7 @@
 }
  
 .dim-card-desc {
-  font-size:   18px;
+  font-size:   14px;
   color:       var(--color-text-muted);
   line-height: 1.6;
 }
@@ -239,7 +239,7 @@
  
 .symptoms-heading {
   font-family:   var(--font-serif);
-  font-size:     32px;
+  font-size:     26px;
   font-weight:   600;
   margin:        0 0 24px;
   color:         #E0DCEE;
@@ -278,7 +278,7 @@
 }
  
 .symptom-text {
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 400;
   color:     var(--color-text-body);
 }
@@ -309,7 +309,7 @@
 }
  
 .cta-label {
-  font-size:      16px;
+  font-size:      12px;
   letter-spacing: 2.5px;
   text-transform: uppercase;
   color:          var(--color-accent);

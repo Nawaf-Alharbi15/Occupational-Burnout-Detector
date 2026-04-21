@@ -406,7 +406,6 @@ function ResultsPage({ answers, onRestart,onGoHome }) {
   const scores  = calcScores(answers);
   const overall = getBurnoutLevel(scores);
  
-  useEffect(() => { fetchGuidance(); }, []);
  
 // Provides specific short guidance based on the currently selected chart bar
 const getAdvice = () => {
@@ -415,7 +414,7 @@ const getAdvice = () => {
   let level;
   let adviceText;
 
-  // performance (High score = Healthy) ---
+  //performance (High score = Healthy) 
   if (activeDim === "performance") {
     if (score >= 75) {
       level = { status: "HEALTHY", color: "#3EB8A0" };
@@ -428,7 +427,7 @@ const getAdvice = () => {
       adviceText = `A score of ${score}% in Professional Efficacy is a critical signal. You likely feel ineffective or that your work no longer matters. It is vital to redefine your contributions and value with leadership support.`;
     }
   } 
-  // --- EXHAUSTION & CYNICISM LOGIC (High score = Risk) ---
+  //EXHAUSTION & CYNICISM (High score = Risk)
   else {
     if (score < 40) {
       level = { status: "LOW CONCERN", color: "#3EB8A0" };
@@ -446,6 +445,9 @@ const getAdvice = () => {
     }
   }
 
+  const finalLevel = level || { status: "N/A", color: "#9E9AAD" };
+  const finalText = adviceText || "No guidance available for this score.";
+  
 // Logic handles Performance as a positive metric and others as negative metrics
   return { status: level.status, color: level.color, text: adviceText };
 };
