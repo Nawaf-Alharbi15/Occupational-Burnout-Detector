@@ -54,7 +54,7 @@
 /* Small all-caps orange label used above section headings */
 .section-label {
   display:        block;
-  font-size:      9px;
+  font-size:      11px;
   letter-spacing: 2.5px;
   text-transform: uppercase;
   color:          var(--color-accent);
@@ -115,7 +115,7 @@
   padding:        6px 18px;
   border:         0.5px solid rgba(232, 124, 62, 0.5);
   border-radius:  var(--radius-pill);
-  font-size:      8px;
+  font-size:      10px;
   letter-spacing: 2px;
   text-transform: uppercase;
   color:          var(--color-accent);
@@ -309,7 +309,7 @@
 }
  
 .cta-label {
-  font-size:      9px;
+  font-size:      11px;
   letter-spacing: 2.5px;
   text-transform: uppercase;
   color:          var(--color-accent);
@@ -370,7 +370,7 @@
   border:         1px solid rgba(232, 124, 62, 0.6);
   border-radius:  var(--radius-pill);
   padding:        16px 48px;
-  font-size:      10px;
+  font-size:      12px;
   font-family:    var(--font-sans);
   font-weight:    500;
   cursor:         pointer;
@@ -803,7 +803,7 @@
   border:        1px solid rgba(232, 124, 62, 0.5);
   border-radius: var(--radius-pill);
   padding:       14px 40px;
-  font-size:     15px;
+  font-size:     12px;
   font-family:   var(--font-sans);
   font-weight:   500;
   cursor:        pointer;
@@ -821,7 +821,7 @@
   border:        1px solid rgba(232, 124, 62, 0.5);
   border-radius: var(--radius-pill);
   padding:       14px 40px;
-  font-size:     15px;
+  font-size:     12px;
   font-family:   var(--font-sans);
   font-weight:   500;
   cursor:        pointer;

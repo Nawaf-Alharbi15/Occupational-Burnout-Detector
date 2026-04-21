@@ -11,14 +11,14 @@
   { id: 7, category: "performance", text: "I feel full of energy." },
   { id: 8, category: "performance", text: "I have achieved many worthwhile things in this job." },
   { id: 9, category: "performance", text: "In my work, I handle emotional problems very calmly." },
-  { id: 10, category: "performance", text: "I can easily sense how my recipients feel about things." },
+  { id: 10, category: "performance", text: "I can easily sense how the people I work with feel about things." },
 
   // Section 3: Depersonalization "cynicism"
-  { id: 11, category: "cynicism", text: "I feel I treat some recipients as if they were impersonal 'items'" },
+  { id: 11, category: "cynicism", text: "I feel I treat the people I serve as if they were impersonal objects." },
   { id: 12, category: "cynicism", text: "Ive become more unsympathetic toward people since I took this job." },
   { id: 13, category: "cynicism", text: "I worry about how this job is emotionally hardening me." },
-  { id: 14, category: "cynicism", text: "I dont care what happens to some recipients" },
-  { id: 15, category: "cynicism", text: "I feel recipients hold me responsible for some of their problems" },
+  { id: 14, category: "cynicism", text: "I dont really care what happens to the people I work with." },
+  { id: 15, category: "cynicism", text: "I feel like the people i work for hold me responsible for some of their problems." },
 ];
 
 
